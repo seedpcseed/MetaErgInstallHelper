@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Author: Lukas Jansen
+# Author: Lukas Jansen; revised Patrick Seed
 # Licensed under the Academic Free License version 3.0
 set -e
 
@@ -14,68 +14,46 @@ if (( $# != 1 )); then
     exit 1
 fi
 
-targetdir=$1
+targetdir="/"
 tmhmm32bit=true
 swissknife="https://sourceforge.net/projects/swissknife/files/swissknife/1.78/swissknife_1.78.tar.gz/download"
 minpath="https://omics.informatics.indiana.edu/mg/get.php?justdoit=yes&software=minpath1.4.tar.gz"
 
 mkdir -p ~/.cpanm
 
-cat << 'EOF' > metaerg.yml
-name: metaerg
-channels:
-  - bioconda
-  - conda-forge
-dependencies:
-  - perl-archive-extract
-  - perl-bioperl
-  - perl-bio-eutilities
-  - perl-dbd-sqlite
-  - perl-dbi
-  - perl-file-copy-recursive
-  - perl-lwp-protocol-https
-  - aragorn
-  - blast
-  - diamond
-  - hmmer
-  - minced
-  - prodigal
-  - perl-app-cpanminus
-  - wget
-  - python=2.7
-  - git
-  - patch
-EOF
-conda env create -f "metaerg.yml" -p "$targetdir"
-rm "metaerg.yml"
+mamba install perl-archive-extract \
+perl-bioperl \
+perl-bio-eutilities \
+perl-dbd-sqlite \
+perl-dbi \
+perl-file-copy-recursive \
+perl-lwp-protocol-https \
+aragorn \
+blast \
+diamond \
+hmmer \
+minced \
+prodigal \
+perl-app-cpanminus \
+wget \
+python=2.7 \
+git \
+patch \
+
 tar xzf "$tmhmm" -C "$targetdir"
 tar xzf "$signalp" -C "$targetdir"
-olddir="$(pwd)"
-cd "$targetdir"
-source activate ./
-cpanm "$swissknife" -n
 
+cpanm "$swissknife" -n
 
 #
 # MinPath
 #
 wget -qO- "$minpath" | tar -xzf - 
 
-cat << 'EOF' > etc/conda/activate.d/minpath-activate.sh
 export MinPath_CONDA_BACKUP=${MINPATH:-}
 export MinPath=$CONDA_PREFIX/MinPath
-EOF
-
-cat << 'EOF' > etc/conda/deactivate.d/minpath-deactivate.sh
-export MinPath=$MinPath_CONDA_BACKUP
-unset MinPath_CONDA_BACKUP
-if [ -z $MinPath ]; then
-    unset MinPath
-fi
-EOF
 
 ln -sr $(echo "MinPath/MinPath?.?.py") "bin/MinPath.py"
-
 
 shebangfix='1 s,^.*$,#!/usr/bin/env perl,'
 unamefix="s/\`uname -m\`/'i386'/"
@@ -106,10 +84,6 @@ mv signalp-?.??/lib/* lib/
 git clone https://github.com/xiaoli-dong/metaerg.git metaerg
 
 ln -sr metaerg/bin/*.pl bin/
-
-check_tools.pl
-
-cd $olddir
 
 echo 
 echo "Finished! You can now just activate the conda env (source activate $targetdir) and run the MetaErg scripts. You probably still have to download or build the database."
