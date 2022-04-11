@@ -21,7 +21,7 @@ minpath="https://omics.informatics.indiana.edu/mg/get.php?justdoit=yes&software=
 
 mkdir -p ~/.cpanm
 
-mamba install -cconda-forge -c bioconda perl-archive-extract \
+mamba install -cconda-forge -c bioconda -c anaconda -c defaults perl-archive-extract \
 perl-bioperl \
 perl-bio-eutilities \
 perl-dbd-sqlite \
